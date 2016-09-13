@@ -93,7 +93,7 @@ Super-type of [`Unitful.Quantity`](@ref) types. Used in dispatch on quantities
 of a particular dimension, without having to specify the units. The type
 parameter `D <: ` [`Unitful.Dimensions`](@ref).
 """
-abstract DimensionedQuantity{D} <: Number
+abstract DimensionedQuantity{D}
 
 """
 ```

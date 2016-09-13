@@ -3,12 +3,12 @@ module Unitful
 
 import Base: ==, <, <=, +, -, *, /, .+, .-, .*, ./, .\, //, ^, .^
 import Base: show, convert
-import Base: abs, abs2, float, inv, sqrt
+import Base: abs, abs2, float, inv, norm, sqrt
 import Base: min, max, floor, ceil, log, log10
 
 import Base: mod, rem, div, fld, cld, trunc, round, sign, signbit
-import Base: isless, isapprox, isinteger, isreal, isinf, isfinite
-import Base: copysign, flipsign
+import Base: isless, isapprox, isinteger, isreal, isinf, isnan, isfinite
+import Base: copysign, flipsign, ctranspose
 import Base: prevfloat, nextfloat, maxintfloat, rat, step #, linspace
 import Base: promote_op, promote_array_type, promote_rule, unsafe_getindex
 import Base: length, float, start, done, next, last, one, zero, colon#, range
@@ -145,12 +145,12 @@ dimension{T,D,U}(::Type{Quantity{T,D,Units{U,D}}}) = D()
 
 """
 ```
-dimension{T<:Number}(x::AbstractArray{T})
+dimension(x::AbstractArray)
 ```
 
-Just calls `map(dimension, x)`.
+Just calls `dimension.(x)`.
 """
-dimension{T<:Number}(x::AbstractArray{T}) = map(dimension, x)
+dimension(x::AbstractArray) = dimension.(x)
 
 """
 ```
@@ -331,11 +331,9 @@ function *{T,D,U}(x::Quantity{T,D,U}, y::Units, z::Units...)
     Quantity(x.val,result_units)
 end
 
-function *(x::Quantity, y::Quantity)
-    xunits = unit(x)
-    yunits = unit(y)
-    result_units = xunits*yunits
-    z = x.val*y.val
+function *(x::Quantity, y::Quantity...)
+    result_units = mapreduce(unit, *, NoUnits, (x, y...))
+    z = *(x.val, map(x->x.val, y)...)
     Quantity(z,result_units)
 end
 
@@ -537,12 +535,16 @@ end
 
 abs(x::Quantity) = Quantity(abs(x.val),  unit(x))
 abs2(x::Quantity) = Quantity(abs2(x.val), unit(x)*unit(x))
+norm(x::Quantity) = Quantity(norm(x.val), unit(x))
 
 trunc(x::Quantity) = Quantity(trunc(x.val), unit(x))
 round(x::Quantity) = Quantity(round(x.val), unit(x))
 
-copysign(x::Quantity, y::Number) = Quantity(copysign(x.val,y/unit(y)), unit(x))
-flipsign(x::Quantity, y::Number) = Quantity(flipsign(x.val,y/unit(y)), unit(x))
+for f in (:copysign, :flipsign)
+    @eval ($f)(x::Quantity, y::Union{Quantity,Number}) =
+        Quantity(($f)(x.val,y/unit(y)), unit(x))
+    @eval ($f)(x::Number, y::Quantity) = ($f)(x, y.val)
+end
 
 isless{T,D,U}(x::Quantity{T,D,U}, y::Quantity{T,D,U}) = isless(x.val, y.val)
 isless(x::Quantity, y::Quantity) = isless(uconvert(unit(y), x).val, y.val)
@@ -553,6 +555,9 @@ isapprox{T,D,U}(x::Quantity{T,D,U}, y::Quantity{T,D,U}) = isapprox(x.val, y.val)
 isapprox(x::Quantity, y::Quantity) = isapprox(uconvert(unit(y), x).val, y.val)
 isapprox(x::Quantity, y::Number) = isapprox(uconvert(Units{(), Dimensions{()}}(), x).val, y)
 isapprox(x::Number, y::Quantity) = isapprox(y,x)
+
+ctranspose{T<:Real,D,U}(x::Quantity{T,D,U}) = x
+ctranspose{T<:Complex,D,U}(x::Quantity{T,D,U}) = Quantity(ctranspose(x.val),U())
 
 =={S,T,D,U}(x::Quantity{S,D,U}, y::Quantity{T,D,U}) = (x.val == y.val)
 function ==(x::Quantity, y::Quantity)
@@ -597,6 +602,7 @@ isinteger(x::Quantity) = isinteger(x.val)
 isreal(x::Quantity) = isreal(x.val)
 isfinite(x::Quantity) = isfinite(x.val)
 isinf(x::Quantity) = isinf(x.val)
+isnan(x::Quantity) = isnan(x.val)
 
 unsigned(x::Quantity) = Quantity(unsigned(x.val), unit(x))
 

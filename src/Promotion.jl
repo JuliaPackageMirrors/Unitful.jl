@@ -51,16 +51,16 @@ promote_op{T2,D1,D2,U}(op, x::Type{Quantity{T2,D2,U}},
     y::Type{DimensionedQuantity{D1}}) = DimensionedQuantity{promote_op(op,D2,D1)}
 
 # number, quantity
-promote_op{R<:Number,S,D,U}(op, ::Type{R}, ::Type{Quantity{S,D,U}}) = Number
-promote_op{R<:Number,S,D,U}(op, x::Type{Quantity{S,D,U}}, y::Type{R}) = Number
+promote_op{R<:Number,S,D,U}(op, ::Type{R}, ::Type{Quantity{S,D,U}}) = Any
+promote_op{R<:Number,S,D,U}(op, x::Type{Quantity{S,D,U}}, y::Type{R}) = Any
 
 # dim'd, dim'd
 promote_op{D1,D2}(op, ::Type{DimensionedQuantity{D1}},
     ::Type{DimensionedQuantity{D2}}) = DimensionedQuantity{promote_op(op,D1,D2)}
 
 # dim'd, number
-promote_op{D}(op, ::Type{DimensionedQuantity{D}}, ::Type{Number}) = Number
-promote_op{D}(op, ::Type{Number}, ::Type{DimensionedQuantity{D}}) = Number
+promote_op{D}(op, ::Type{DimensionedQuantity{D}}, ::Type{Number}) = Any
+promote_op{D}(op, ::Type{Number}, ::Type{DimensionedQuantity{D}}) = Any
 
 
 # ------ promote_op with units ------
@@ -96,7 +96,7 @@ promote_op{R<:Number,S<:Units}(op, x::Type{S}, y::Type{R}) =
 
 # quantity, quantity (different dims)
 promote_rule{S1,S2,D1,D2,U1,U2}(::Type{Quantity{S1,D1,U1}},
-    ::Type{Quantity{S2,D2,U2}}) = Number
+    ::Type{Quantity{S2,D2,U2}}) = Any
 
 # quantity, quantity (same dims)
 function promote_rule{S1,S2,D,U1,U2}(::Type{Quantity{S1,D,U1}},
@@ -112,22 +112,22 @@ promote_rule{S1,S2,D,U}(::Type{Quantity{S1,D,U}}, ::Type{Quantity{S2,D,U}}) =
 
 # dim'd, quantity (different dims)
 promote_rule{S2,D1,D2,U}(::Type{DimensionedQuantity{D1}},
-    ::Type{Quantity{S2,D2,U}}) = Number
+    ::Type{Quantity{S2,D2,U}}) = Any
 
 # dim'd, quantity (same dims)
 promote_rule{S2,D,U}(::Type{DimensionedQuantity{D}},
     ::Type{Quantity{S2,D,U}}) = DimensionedQuantity{D}
 
 # number, quantity
-promote_rule{S,T<:Number,D,U}(::Type{Quantity{S,D,U}}, ::Type{T}) = Number
+promote_rule{S,T<:Number,D,U}(::Type{Quantity{S,D,U}}, ::Type{T}) = Any
 
 # dim'd, dim'd (different dims)
 promote_rule{D1,D2}(::Type{DimensionedQuantity{D1}},
-    ::Type{DimensionedQuantity{D2}}) = Number
+    ::Type{DimensionedQuantity{D2}}) = Any
 
 # dim'd, dim'd (same dims)
 promote_rule{D}(::Type{DimensionedQuantity{D}},
     ::Type{DimensionedQuantity{D}}) = DimensionedQuantity{D}
 
 # dim'd, number
-promote_rule{D,T<:Number}(::Type{DimensionedQuantity{D}}, ::Type{T}) = Number
+promote_rule{D,T<:Number}(::Type{DimensionedQuantity{D}}, ::Type{T}) = Any
